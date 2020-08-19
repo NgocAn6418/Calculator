@@ -7,6 +7,7 @@
       </div>
       <div class="calculator__container">
         <div class="calculator__line">
+          <button class="calculator__btn" @click="clearBtn">C</button>
           <button
             class="calculator__btn"
             v-on:keyup.8="clearCharBtn"
@@ -14,7 +15,7 @@
           >
             CE
           </button>
-          <button class="calculator__btn" @click="clearBtn">C</button>
+
           <button class="calculator__btn" @click="signBtn">+/-</button>
           <button class="calculator__btn" @click="percentBtn">%</button>
           <button class="calculator__btn" @click="divideBtn">/</button>
@@ -84,6 +85,7 @@ import { sin, cos, create, all } from "mathjs";
 
 const config = {};
 const math = create(all, config);
+let flag = true;
 export default {
   name: "Home",
   data() {
@@ -98,15 +100,29 @@ export default {
       this.result = "0";
     },
     clearCharBtn() {
-      if (this.input !== "0")
-        this.input = this.input.slice(0, this.input.length - 1);
+      var l = this.input.length - 1;
+      if (
+        this.input[l] === "(" &&
+        (this.input[l - 1] === "n" || this.input[l - 1] === "s")
+      ) {
+        this.input = this.input.slice(0, l - 3);
+      }
+
+      if (this.input !== "0") this.input = this.input.slice(0, l);
+      if (this.input === "") this.input = "0";
     },
     signBtn() {
       var i = this.input.length - 1;
       if (this.input[i] !== ")") {
         var numToSign = this.getLastestNumberAndSlice();
-        numToSign = eval(numToSign + "* -1");
-        this.input += "(" + numToSign + ")";
+        var k = this.input.length - 1;
+        if (this.input[k - 1] === "n" || this.input[k - 1] === "s") {
+          numToSign = eval(numToSign + "* -1");
+          this.input += numToSign + ")";
+        } else {
+          numToSign = eval(numToSign + "* -1");
+          this.input += "(" + numToSign + ")";
+        }
       } else {
         var tempNum = "";
         var numToSign = "";
@@ -117,8 +133,14 @@ export default {
           i--;
         }
         for (var k = tempNum.length - 1; k >= 0; k--) numToSign += tempNum[k];
-        this.input = this.input.slice(0, i + 1);
-        this.input += eval(numToSign + "*-1");
+        if (this.input[i] === "n" || this.input[i] === "s") {
+          this.input = this.input.slice(0, i + 1);
+          numToSign = eval(numToSign + "*-1");
+          this.input += "(" + numToSign + ")";
+        } else {
+          this.input = this.input.slice(0, i + 1);
+          this.input += eval(numToSign + "*-1");
+        }
         // for (var k = tempNum.length-k)
         // this.input = this.input.slice(i + 1);
       }
@@ -127,13 +149,15 @@ export default {
       var i = this.input.length - 1;
       var numToSignReverse = "";
       var Val = "";
-      while ((i !== -1 && /\d/.test(this.input[i])) || this.input[i] === ".") {
+      while (i !== -1 && (/\d/.test(this.input[i]) || this.input[i] === ".")) {
         numToSignReverse += this.input[i];
         i--;
       }
       for (let j = numToSignReverse.length - 1; j >= 0; j--)
         Val += numToSignReverse[j];
+
       this.input = this.input.slice(0, i + 1);
+      console.log(this.input);
       return Val;
     },
     percentBtn() {
